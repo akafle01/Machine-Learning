@@ -1,0 +1,58 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# dataset
+data = pd.read_csv('Housing.csv')
+
+# Define features and variables
+X2 = data[['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'parking', 'prefarea']]
+y2 = data['price']
+
+# categorical columns and perform one-hot encoding
+categorical_columns = ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'prefarea']
+X2 = pd.get_dummies(X2, columns=categorical_columns, drop_first=True)
+
+# defining hyperparameters
+alpha_values = [0.1, 0.05, 0.01]  # Learning rates
+iterations = 1000  # Number of iterations
+
+# Initialize parameters (thetas) to zero
+initial_theta2_norm = np.zeros(X2.shape[1])  # For Normalization
+initial_theta2_std = np.zeros(X2.shape[1])   # For Standardization
+
+# Create a copy of X2 for normalization and standardization
+X2_norm = X2.copy()
+X2_std = X2.copy()
+
+# Normalize X2 (input normalization)
+for col in X2_norm.columns:
+    X2_norm[col] = (X2_norm[col] - X2_norm[col].mean()) / X2_norm[col].std()
+
+# Standardize X2 (input standardization)
+for col in X2_std.columns:
+    X2_std[col] = (X2_std[col] - X2_std[col].mean()) / X2_std[col].std()
+
+# Perform gradient descent with input normalization
+losses2_norm = {}
+for alpha in alpha_values:
+    theta, history = gradient_descent(X2_norm, y2.to_numpy(), initial_theta2_norm, alpha, iterations)
+    losses2_norm[alpha] = history
+
+# Perform gradient descent with input standardization
+losses2_std = {}
+for alpha in alpha_values:
+    theta, history = gradient_descent(X2_std, y2.to_numpy(), initial_theta2_std, alpha, iterations)
+    losses2_std[alpha] = history
+
+# Plot 
+plt.figure(figsize=(12, 6))
+for alpha, loss_history in losses2_norm.items():
+    plt.plot(range(iterations), loss_history, label=f'Normalization, Alpha={alpha}')
+for alpha, loss_history in losses2_std.items():
+    plt.plot(range(iterations), loss_history, label=f'Standardization, Alpha={alpha}')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.legend()
+plt.title('Training Loss vs. Iterations (Problem 2.b)')
+plt.show()
