@@ -1,0 +1,54 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# loading housing data
+data = pd.read_csv('Housing.csv')
+
+# parameters and variables 
+X1 = data[['area', 'bedrooms', 'bathrooms', 'stories', 'parking']]
+y1 = data['price']
+
+#  hyperparameters
+alpha_values = [0.1, 0.05, 0.01]  # Learning rates
+iterations = 1000  # Number of iterations
+
+# Initialize parameters (thetas) to zero
+initial_theta1_norm = np.zeros(X1.shape[1])  # For Normalization
+initial_theta1_std = np.zeros(X1.shape[1])   # For Standardization
+
+# copy of X1 for normalization and standardization
+X1_norm = X1.copy()
+X1_std = X1.copy()
+
+# input normalization
+for col in X1_norm.columns:
+    X1_norm[col] = (X1_norm[col] - X1_norm[col].mean()) / X1_norm[col].std()
+
+# input standardization
+for col in X1_std.columns:
+    X1_std[col] = (X1_std[col] - X1_std[col].mean()) / X1_std[col].std()
+
+# gradient descent with input normalization
+losses1_norm = {}
+for alpha in alpha_values:
+    theta, history = gradient_descent(X1_norm.to_numpy(), y1.to_numpy(), initial_theta1_norm, alpha, iterations)
+    losses1_norm[alpha] = history
+
+# gradient descent with input standardization
+losses1_std = {}
+for alpha in alpha_values:
+    theta, history = gradient_descent(X1_std.to_numpy(), y1.to_numpy(), initial_theta1_std, alpha, iterations)
+    losses1_std[alpha] = history
+
+# Plot 
+plt.figure(figsize=(12, 6))
+for alpha, loss_history in losses1_norm.items():
+    plt.plot(range(iterations), loss_history, label=f'Normalization, Alpha={alpha}')
+for alpha, loss_history in losses1_std.items():
+    plt.plot(range(iterations), loss_history, label=f'Standardization, Alpha={alpha}')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.legend()
+plt.title('Training Loss vs. Iterations (Problem 2.a)')
+plt.show()
