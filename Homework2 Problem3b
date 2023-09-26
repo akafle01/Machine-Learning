@@ -1,0 +1,72 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Load your dataset (replace 'your_dataset.csv' with the actual filename)
+data = pd.read_csv('Housing.csv')
+
+# Define features and target variable for Problem 3b
+X3b = data[['area', 'bedrooms', 'bathrooms', 'stories', 'mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'parking', 'prefarea']]
+y3b = data['price']
+
+# Identify categorical columns and perform one-hot encoding
+categorical_columns = ['mainroad', 'guestroom', 'basement', 'hotwaterheating', 'airconditioning', 'prefarea']
+X3b = pd.get_dummies(X3b, columns=categorical_columns, drop_first=True)
+
+# Define hyperparameters
+alpha_values = [0.1, 0.05, 0.01]  # Learning rates
+lambda_value = 0.1  # Regularization parameter
+iterations = 1000  # Number of iterations
+
+# Initialize parameters (thetas) to zero
+initial_theta3b_norm = np.zeros(X3b.shape[1])  # For Normalization
+initial_theta3b_std = np.zeros(X3b.shape[1])   # For Standardization
+
+# Create a copy of X3b for normalization and standardization
+X3b_norm = X3b.copy()
+X3b_std = X3b.copy()
+
+# Normalize X3b (input normalization)
+for col in X3b_norm.columns:
+    X3b_norm[col] = (X3b_norm[col] - X3b_norm[col].mean()) / X3b_norm[col].std()
+
+# Standardize X3b (input standardization)
+for col in X3b_std.columns:
+    X3b_std[col] = (X3b_std[col] - X3b_std[col].mean()) / X3b_std[col].std()
+
+# Perform gradient descent with input normalization and regularization
+losses3b_norm = {}
+losses3b_std = {}
+
+def gradient_descent_with_regularization(X, y, theta, alpha, iterations, lambda_value):
+    m = len(y)
+    history = []
+
+    for _ in range(iterations):
+        error = X.dot(theta) - y
+        gradient = (X.T.dot(error) + lambda_value * theta) / m  # Regularization term added
+        theta = theta - (alpha * gradient)
+        cost = np.sum(error ** 2) / (2 * m) + (lambda_value / (2 * m)) * np.sum(theta[1:] ** 2)  # Regularization term added
+        history.append(cost)
+
+    return theta, history
+
+for alpha in alpha_values:
+    # Gradient Descent with input normalization
+    theta, history = gradient_descent_with_regularization(X3b_norm, y3b.to_numpy(), initial_theta3b_norm, alpha, iterations, lambda_value)
+    losses3b_norm[alpha] = history
+
+    # Gradient Descent with input standardization
+    theta, history = gradient_descent_with_regularization(X3b_std, y3b.to_numpy(), initial_theta3b_std, alpha, iterations, lambda_value)
+    losses3b_std[alpha] = history
+
+# Plot the training and evaluation losses for Normalization and Standardization
+plt.figure(figsize=(12, 6))
+best_alpha = 0.05  # Choose the best alpha from your experiments
+plt.plot(range(iterations), losses3b_norm[best_alpha], label=f'Normalization, Alpha={best_alpha}')
+plt.plot(range(iterations), losses3b_std[best_alpha], label=f'Standardization, Alpha={best_alpha}')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.legend()
+plt.title('Training Loss vs. Iterations (Problem 3b)')
+plt.show()
