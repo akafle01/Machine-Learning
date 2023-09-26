@@ -1,0 +1,70 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+# dataset
+data = pd.read_csv('Housing.csv')
+
+# Defining features and target variable for Problem 3a
+X3a = data[['area', 'bedrooms', 'bathrooms', 'stories', 'parking']]
+y3a = data['price']
+
+# hyperparameters
+alpha_values = [0.1, 0.05, 0.01]  # Learning rates
+lambda_value = 0.1  # Regularization parameter
+iterations = 1000  # Number of iterations
+
+# Initialize parameters (thetas) to zero
+initial_theta3a_norm = np.zeros(X3a.shape[1])  # For Normalization
+initial_theta3a_std = np.zeros(X3a.shape[1])   # For Standardization
+
+# Create a copy of X3a for normalization and standardization
+X3a_norm = X3a.copy()
+X3a_std = X3a.copy()
+
+# input normalization
+for col in X3a_norm.columns:
+    X3a_norm[col] = (X3a_norm[col] - X3a_norm[col].mean()) / X3a_norm[col].std()
+
+# input standardization
+for col in X3a_std.columns:
+    X3a_std[col] = (X3a_std[col] - X3a_std[col].mean()) / X3a_std[col].std()
+
+# Perform gradient descent with input normalization and regularization
+losses3a_norm = {}
+losses3a_std = {}
+
+def gradient_descent_with_regularization(X, y, theta, alpha, iterations, lambda_value):
+    m = len(y)
+    history = []
+
+    for _ in range(iterations):
+        error = X.dot(theta) - y
+        gradient = (X.T.dot(error) + lambda_value * theta) / m  # Regularization term added
+        theta = theta - (alpha * gradient)
+        cost = np.sum(error ** 2) / (2 * m) + (lambda_value / (2 * m)) * np.sum(theta[1:] ** 2)  # Regularization term added
+        history.append(cost)
+
+    return theta, history
+
+
+
+for alpha in alpha_values:
+    # Gradient Descent with input normalization
+    theta, history = gradient_descent_with_regularization(X3a_norm, y3a.to_numpy(), initial_theta3a_norm, alpha, iterations, lambda_value)
+    losses3a_norm[alpha] = history
+
+    # Gradient Descent with input standardization
+    theta, history = gradient_descent_with_regularization(X3a_std, y3a.to_numpy(), initial_theta3a_std, alpha, iterations, lambda_value)
+    losses3a_std[alpha] = history
+
+# Plot 
+plt.figure(figsize=(12, 6))
+best_alpha = 0.05  # we can choose the best alpha value based on the best result
+plt.plot(range(iterations), losses3a_norm[best_alpha], label=f'Normalization, Alpha={best_alpha}')
+plt.plot(range(iterations), losses3a_std[best_alpha], label=f'Standardization, Alpha={best_alpha}')
+plt.xlabel('Iterations')
+plt.ylabel('Loss')
+plt.legend()
+plt.title('Training Loss vs. Iterations (Problem 3a)')
+plt.show()
