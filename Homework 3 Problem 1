@@ -1,0 +1,52 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the diabetes dataset
+data = pd.read_csv('diabetes.csv')
+# Split data into training and test sets
+X = data[['Glucose','BloodPressure','SkinThickness','Insulin','BMI','DiabetesPedigreeFunction','Age','Outcome']]
+y = data['Pregnancies']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Train a logistic regression model
+lr_model = LogisticRegression()
+lr_model.fit(X_train, y_train)
+
+# Predict on the test set
+y_pred = lr_model.predict(X_test)
+
+# Calculate metrics
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred, average = 'macro')
+recall = recall_score(y_test, y_pred, average = 'macro')
+f1 = f1_score(y_test, y_pred, average = 'macro')
+
+# Plot confusion matrix
+conf_matrix = confusion_matrix(y_test, y_pred)
+# Plot the confusion matrix using a heatmap (optional)
+conf_matrix = confusion_matrix(y_test, y_pred)
+
+# Plot the confusion matrix using a heatmap
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False)
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()
+
+# Display classification metrics and confusion matrix
+print("Accuracy:", accuracy)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1)
