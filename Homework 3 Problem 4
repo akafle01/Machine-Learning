@@ -1,0 +1,49 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.decomposition import PCA
+
+# Load the cancer dataset
+data = pd.read_csv('cancer.csv')
+# Split data into training and test sets
+X = data[['radius_mean','texture_mean','perimeter_mean','area_mean','smoothness_mean','compactness_mean','concavity_mean','concave points_mean','symmetry_mean','fractal_dimension_mean','radius_se','texture_se','perimeter_se','area_se','smoothness_se','compactness_se','concavity_se','concave points_se','symmetry_se','fractal_dimension_se','radius_worst','texture_worst','perimeter_worst','area_worst','smoothness_worst','compactness_worst','concavity_worst','concave points_worst','symmetry_worst','fractal_dimension_worst']]
+y = data[['id']]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Perform PCA with different numbers of components
+k_values = [1, 5, 10, 15, 20, 25, 30]
+accuracy_values = []
+
+for k in k_values:
+    pca = PCA(n_components=k)
+    X_train_pca = pca.fit_transform(X_train)
+    X_test_pca = pca.transform(X_test)
+
+    # Train a logistic regression model with PCA
+    lr_model_pca = LogisticRegression()
+    lr_model_pca.fit(X_train_pca, y_train)
+
+    # Evaluate the model
+    y_pred_pca = lr_model_pca.predict(X_test_pca)
+
+    # Calculate accuracy and append to list
+    accuracy = accuracy_score(y_test, y_pred_pca)
+    accuracy_values.append(accuracy)
+
+# Plot accuracy vs. number of components
+plt.figure(figsize=(10, 6))
+plt.plot(k_values, accuracy_values, marker='o', linestyle='-')
+plt.xlabel('Number of Principal Components (K)')
+plt.ylabel('Accuracy')
+plt.title('Accuracy vs. Number of Principal Components (PCA)')
+plt.grid(True)
+plt.show()
+
+# Find the optimum number of components with the highest accuracy
+optimal_k = k_values[np.argmax(accuracy_values)]
+print(f'Optimal number of components: {optimal_k}')
+print(f'Accuracy with {optimal_k} components: {max(accuracy_values)}')
