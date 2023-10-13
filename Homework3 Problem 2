@@ -1,0 +1,72 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load the cancer dataset
+data = pd.read_csv('cancer.csv')
+# Split data into training and test sets
+X = data[['radius_mean','texture_mean','perimeter_mean','area_mean','smoothness_mean','compactness_mean','concavity_mean','concave points_mean','symmetry_mean','fractal_dimension_mean','radius_se','texture_se','perimeter_se','area_se','smoothness_se','compactness_se','concavity_se','concave points_se','symmetry_se','fractal_dimension_se','radius_worst','texture_worst','perimeter_worst','area_worst','smoothness_worst','compactness_worst','concavity_worst','concave points_worst','symmetry_worst','fractal_dimension_worst']]
+y = data[['id']]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Standardize features
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+# Train a logistic regression model without weight penalty
+lr_model = LogisticRegression()
+lr_model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = lr_model.predict(X_test)
+# Calculate metrics and plot confusion matrix
+accuracy = accuracy_score(y_test, y_pred)
+precision = precision_score(y_test, y_pred, average='macro')
+recall = recall_score(y_test, y_pred, average='macro')
+f1 = f1_score(y_test, y_pred, average='macro')
+# Print the metrics for the non-regularized model
+print("Non-Regularized Logistic Regression Metrics:")
+print("Accuracy:", accuracy)
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1)
+# Calculate and plot the confusion matrix for the non-regularized model
+conf_matrix = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', cbar=False)
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix (Non-Regularized)')
+plt.show()
+# Train a logistic regression model with L2 regularization (weight penalty)
+lr_model_regularized = LogisticRegression(penalty='l2', random_state=42)
+lr_model_regularized.fit(X_train, y_train)
+
+# Evaluate the regularized model
+y_pred_regularized = lr_model_regularized.predict(X_test)
+
+# Calculate classification metrics for the regularized model
+accuracy_regularized = accuracy_score(y_test, y_pred_regularized)
+precision_regularized = precision_score(y_test, y_pred_regularized,average='macro')
+recall_regularized = recall_score(y_test, y_pred_regularized,average='macro')
+f1_regularized = f1_score(y_test, y_pred_regularized,average='macro')
+
+# Print the metrics for the regularized model
+print("\nRegularized Logistic Regression Metrics:")
+print("Accuracy:", accuracy_regularized)
+print("Precision:", precision_regularized)
+print("Recall:", recall_regularized)
+print("F1 Score:", f1_regularized)
+
+# Calculate and plot the confusion matrix for the regularized model
+conf_matrix_regularized = confusion_matrix(y_test, y_pred_regularized)
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix_regularized, annot=True, fmt='d', cmap='Blues', cbar=False)
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix (Regularized)')
+plt.show()
